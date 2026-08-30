@@ -1,0 +1,23 @@
+[project]
+name = "comp0034-reassessment-2024"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest",
+    "dash",
+    "pandas",
+    "playwright",
+    "pytest-playwright",
+    "selenium",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# see https://docs.pytest.org/en/stable/explanation/goodpractices.html
+[pytest]
+addopts = ["--import-mode=importlib"]
