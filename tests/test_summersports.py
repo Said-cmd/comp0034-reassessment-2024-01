@@ -31,10 +31,10 @@ def test_all_charts_present(page, dash_url):
     # WHEN a user opens it
     page.goto(dash_url)
     # THEN all 4 required visualisations are present
-    assert page.locator("#attendance-trend").count() == 1
-    assert page.locator("#attendance-by-borough").count() == 1
-    assert page.locator("#top-sports").count() == 1
-    assert page.locator("#park-table").count() == 1
+    expect(page.locator("#attendance-trend")).to_have_count(1)
+    expect(page.locator("#attendance-by-borough")).to_have_count(1)
+    expect(page.locator("#top-sports")).to_have_count(1)
+    expect(page.locator("#park-table")).to_have_count(1)
 
 
 def test_suggestions_table_present(page, dash_url):
