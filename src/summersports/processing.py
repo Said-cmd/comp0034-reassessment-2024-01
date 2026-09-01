@@ -108,27 +108,43 @@ def park_summary(df: pd.DataFrame) -> pd.DataFrame:
     return s.sort_values("total_attendance", ascending=False)
 
 
-def suggested_sports_for_next_year(df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
+def suggested_sports_for_next_year(
+    df: pd.DataFrame, n: int = 5, min_years: int = 3, direction: str = "growing"
+) -> pd.DataFrame:
     """Rank sports by attendance growth trend (linear fit per sport, across years).
 
-    Uses the full dataset rather than the borough/year filters, since a
-    multi-year trend needs more than one filtered slice. Sports with
-    only one year of data are skipped.
+    Excludes sports with fewer than min_years of data, since a line
+    through only 2 points always fits perfectly. direction filters to
+    only positive ("growing") or only negative ("declining") trends,
+    rather than mixing both in one ranked list.
 
     Args:
         df: The full, unfiltered dataset.
-        n: How many top-trending sports to return.
+        n: How many sports to return.
+        min_years: Minimum distinct years of data required for a sport
+            to be included. Defaults to 3.
+        direction: "growing" returns only sports with a positive trend,
+            highest first. "declining" returns only sports with a
+            negative trend, steepest decline first.
 
     Returns:
-        DataFrame with sport, trend_per_year, latest_attendance, sorted
-        by trend_per_year descending.
+        DataFrame with sport, trend_per_year, latest_attendance,
+        years_of_data. May have fewer than n rows.
+
+    Raises:
+        ValueError: If direction is not "growing" or "declining".
 
     """
+    if direction not in ("growing", "declining"):
+        raise ValueError(f"direction must be 'growing' or 'declining', got {direction!r}")
+
     yearly = df.groupby(["sport", "year"])["attendance"].sum().reset_index()
 
     trends = []
     for sport, group in yearly.groupby("sport"):
-        if len(group) < 2:
+        # a line can't be fit through fewer than 2 points, regardless of
+        # what min_years the caller asks for
+        if len(group) < max(min_years, 2):
             continue
         slope, _intercept = np.polyfit(group["year"], group["attendance"], 1)
         latest = group.sort_values("year").iloc[-1]["attendance"]
@@ -136,10 +152,20 @@ def suggested_sports_for_next_year(df: pd.DataFrame, n: int = 5) -> pd.DataFrame
             "sport": sport,
             "trend_per_year": round(float(slope), 1),
             "latest_attendance": int(latest),
+            "years_of_data": len(group),
         })
 
     if not trends:
-        return pd.DataFrame(columns=["sport", "trend_per_year", "latest_attendance"])
+        return pd.DataFrame(
+            columns=["sport", "trend_per_year", "latest_attendance", "years_of_data"]
+        )
 
-    trend_df = pd.DataFrame(trends).sort_values("trend_per_year", ascending=False)
+    trend_df = pd.DataFrame(trends)
+    if direction == "growing":
+        trend_df = trend_df[trend_df["trend_per_year"] > 0]
+        trend_df = trend_df.sort_values("trend_per_year", ascending=False)
+    else:
+        trend_df = trend_df[trend_df["trend_per_year"] < 0]
+        trend_df = trend_df.sort_values("trend_per_year", ascending=True)
+
     return trend_df.head(n)

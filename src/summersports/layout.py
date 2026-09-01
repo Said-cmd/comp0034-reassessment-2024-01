@@ -5,14 +5,16 @@ from dash import dash_table, dcc, html
 from summersports import processing
 
 
-def build_layout(df: pd.DataFrame, suggestions: pd.DataFrame) -> html.Div:
+def build_layout(df: pd.DataFrame, growing: pd.DataFrame, declining: pd.DataFrame) -> html.Div:
     """Build the app's HTML layout.
 
     Args:
         df: The full dataset, used to populate the dropdown filters.
-        suggestions: Pre-computed future-events trend table (see
+        growing: Sports with a positive attendance trend (see
             processing.suggested_sports_for_next_year), rendered as a
             static section independent of the dropdown filters.
+        declining: Sports with a negative attendance trend, same source
+            function called with direction="declining".
 
     """
     options = processing.get_filter_options(df)
@@ -39,18 +41,34 @@ def build_layout(df: pd.DataFrame, suggestions: pd.DataFrame) -> html.Div:
             sort_action="native", page_size=13,
         ),
 
-        html.H2("Suggested sports for future years"),
+        html.H2("Sports trending upward"),
         html.P(
             "Ranked by attendance growth trend (a linear fit across all "
-            "available years for each sport). This section is independent "
-            "of the filters above, since a future-years suggestion needs "
-            "the full multi-year picture rather than one filtered slice."
+            "available years for each sport with at least 3 years of "
+            "data). Independent of the filters above, since a trend "
+            "needs the full multi-year picture. Only sports with a "
+            "genuinely positive trend appear here."
         ),
         dash_table.DataTable(
             id="suggestions-table",
             columns=[{"name": c, "id": c} for c in
-                     ["sport", "trend_per_year", "latest_attendance"]],
-            data=suggestions.to_dict("records"),
+                     ["sport", "trend_per_year", "latest_attendance", "years_of_data"]],
+            data=growing.to_dict("records"),
+            sort_action="native",
+        ),
+
+        html.H2("Sports trending downward"),
+        html.P(
+            "The same method applied in the opposite direction. Two of "
+            "the largest programmes by attendance appear at the top of "
+            "this list, which is worth the manager's attention even "
+            "though it isn't a 'suggestion' in the usual sense."
+        ),
+        dash_table.DataTable(
+            id="declining-table",
+            columns=[{"name": c, "id": c} for c in
+                     ["sport", "trend_per_year", "latest_attendance", "years_of_data"]],
+            data=declining.to_dict("records"),
             sort_action="native",
         ),
     ])

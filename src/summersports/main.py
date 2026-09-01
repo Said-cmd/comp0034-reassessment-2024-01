@@ -12,11 +12,12 @@ from summersports.layout import build_layout
 def create_app() -> Dash:
     """Build and configure the Dash app."""
     df = processing.load_data()
-    suggestions = processing.suggested_sports_for_next_year(df)
+    growing = processing.suggested_sports_for_next_year(df, direction="growing")
+    declining = processing.suggested_sports_for_next_year(df, direction="declining")
 
     app = Dash(__name__)
     app.title = "Summer Sports Dashboard"
-    app.layout = build_layout(df, suggestions)
+    app.layout = build_layout(df, growing, declining)
     register_callbacks(app, df)
     return app
 

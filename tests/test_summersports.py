@@ -37,13 +37,22 @@ def test_all_charts_present(page, dash_url):
     expect(page.locator("#park-table")).to_have_count(1)
 
 
-def test_suggestions_table_present(page, dash_url):
+def test_growing_sports_table_present(page, dash_url):
     # GIVEN the app is running
     # WHEN a user opens it
     page.goto(dash_url)
-    # THEN the future-events suggestions table is present and populated
-    expect(page.get_by_text("Suggested sports for future years")).to_have_count(1)
+    # THEN the growing-sports table is present and populated
+    expect(page.get_by_text("Sports trending upward")).to_have_count(1)
     expect(page.locator("#suggestions-table")).to_have_count(1)
+
+
+def test_declining_sports_table_present(page, dash_url):
+    # GIVEN the app is running
+    # WHEN a user opens it
+    page.goto(dash_url)
+    # THEN the declining-sports table is present and populated
+    expect(page.get_by_text("Sports trending downward")).to_have_count(1)
+    expect(page.locator("#declining-table")).to_have_count(1)
 
 
 def test_filter_by_borough_updates_summary(page, dash_url):
